@@ -113,6 +113,7 @@ asflags-y += -DKSU_PREINIT_RUNNER_BIN=\"$(obj)/preinit/runner.elf\"
 else
 $(warning -- KernelSU: $(KSU_UAPI_INC) not found, preinit disabled)
 ccflags-y += -DKSU_NO_PREINIT
+kernelsu-objs += preinit/stub.o
 endif
 
 obj-$(CONFIG_KSU) += kernelsu.o
