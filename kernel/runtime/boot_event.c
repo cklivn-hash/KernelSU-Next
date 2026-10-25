@@ -14,8 +14,7 @@
 
 bool ksu_module_mounted __read_mostly = false;
 bool ksu_boot_completed __read_mostly = false;
-
-extern void ksu_avc_spoof_late_init(void);
+extern struct static_key_true ksu_is_input_hook_enabled;
 
 void on_post_fs_data(void)
 {
@@ -32,7 +31,10 @@ void on_post_fs_data(void)
     ksu_load_allow_list();
     ksu_observer_init();
     // Sanity check for safe mode only needs early-boot input samples.
-    ksu_stop_input_hook_runtime();
+    if (static_key_enabled(&ksu_is_input_hook_enabled)) {
+        static_branch_disable(&ksu_is_input_hook_enabled);
+        pr_info("ksu_input_hook is disabled\n");
+    }
     ksu_selinux_hide_handle_post_fs_data();
     // retry forced features which failed at second stage
     ksu_feature_apply_forced();
@@ -73,5 +75,6 @@ void on_boot_completed(void)
     pr_info("on_boot_completed!\n");
     track_throne(true);
     ksu_selinux_hide_drop_backup_if_unused();
-    ksu_avc_spoof_late_init();
+    // AVC log spoofing is provided by SuSFS (CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING),
+    // the extras.c kprobe variant is not built with SuSFS manual hooks.
 }
